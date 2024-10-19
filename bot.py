@@ -2,8 +2,8 @@ import os
 import pyrogram
 from pyrogram import Client, filters
 import aiohttp
-import aiofiles
-from tqdm import tqdm  # Make sure to install tqdm
+from bs4 import BeautifulSoup
+import urllib.parse
 
 # Your bot token and credentials
 bot_token = "7490926656:AAHG-oUUzGPony9xfyApSI0EbbymhneDU1k"
@@ -17,28 +17,38 @@ async def download_file(url):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             if response.status == 200:
-                # Ensure we're downloading a file, not an HTML page
                 content_type = response.headers.get("Content-Type", "")
+                # If the URL is a direct file link
                 if "application" in content_type or "image" in content_type or "video" in content_type:
-                    filename = url.split("/")[-1]  # Extract filename from URL
-
-                    # Use aiofiles for async file I/O and tqdm for progress bar
-                    total_size = int(response.headers.get('Content-Length', 0))
-                    with tqdm(total=total_size, unit='B', unit_scale=True, desc=filename) as bar:
-                        async with aiofiles.open(filename, "wb") as f:
-                            while True:
-                                chunk = await response.content.read(1024)  # Read in chunks
-                                if not chunk:
-                                    break
-                                await f.write(chunk)
-                                bar.update(len(chunk))
+                    filename = url.split("/")[-1]
+                    with open(filename, "wb") as f:
+                        f.write(await response.read())
                     return filename
+                # If the URL is a webpage, extract downloadable links
+                elif "text/html" in content_type:
+                    return await extract_links_from_page(url)
             return None
+
+async def extract_links_from_page(url):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            if response.status == 200:
+                soup = BeautifulSoup(await response.text(), 'html.parser')
+                links = []
+                # Find all links on the page
+                for anchor in soup.find_all('a', href=True):
+                    link = anchor['href']
+                    # Validate and normalize the link
+                    full_url = urllib.parse.urljoin(url, link)
+                    links.append(full_url)
+                
+                return links
+    return None
 
 @bot.on_message(filters.command("start"))
 async def start_command(client, message):
     await message.reply("👋 Welcome to the URL Uploader Bot!\n"
-                        "Send me a command like `/upload <url>` to upload files from a direct link.")
+                        "Send me a command like `/upload <url>` to upload files from a direct link or a website.")
 
 @bot.on_message(filters.command("upload"))
 async def upload_file(client, message):
@@ -50,14 +60,17 @@ async def upload_file(client, message):
     await message.reply("Downloading file...")
 
     # Download the file
-    filename = await download_file(url)
-    if filename:
+    result = await download_file(url)
+    
+    if isinstance(result, list):
+        await message.reply("Found links on the page:\n" + "\n".join(result))
+    elif result:
         await message.reply("Uploading file...")
-        await bot.send_document(message.chat.id, filename)
-        os.remove(filename)  # Clean up the file after uploading
+        await bot.send_document(message.chat.id, result)
+        os.remove(result)  # Clean up the file after uploading
         await message.reply("File uploaded successfully.")
     else:
-        await message.reply("Failed to download the file. Please check the URL and ensure it's a direct file link.")
+        await message.reply("Failed to download the file. Please check the URL and ensure it's valid.")
 
 @bot.on_message(filters.command("stop"))
 async def stop_process(client, message):
