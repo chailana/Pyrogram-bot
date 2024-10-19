@@ -1,36 +1,111 @@
-from pyrogram import Client, filters, idle
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import asyncio
-from flask import Flask
-import threading
 
-API_ID = 22420997  # Replace with your actual API ID
-API_HASH = "d7fbe2036e9ed2a1468fad5a5584a255"  # Replace with your actual API hash
-BOT_TOKEN = "7176424785:AAEusrLtmtGgRisJ6Pje6yAnN-ZbdZMoO1Q"  # Replace with your actual bot token
+# Replace these placeholders with your actual values
+bot_token = "7176424785:AAEusrLtmtGgRisJ6Pje6yAnN-ZbdZMoO1Q"  # Bot Token
+api_hash = "d7fbe2036e9ed2a1468fad5a5584a255"  # API Hash
+api_id = 22420997  # API ID
 
-app = Client("my_bot", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
+# Initialize the bot client
+bot = Client("mybot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
 
-# Flask app setup
-flask_app = Flask(__name__)
+# Flag to control the ongoing process
+is_stopped = False
 
-@flask_app.route('/')
-def hello():
-    return 'Hello, World!'  # Ensure no non-printable characters are present
+@bot.on_message(filters.command("start"))
+def send_start(client: Client, message):
+    bot.send_message(
+        message.chat.id,
+        f"__👋 Hi **{message.from_user.mention}**, I am Save Restricted Bot, I can send you restricted content by its post link__",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("🌐 Source Code", url="https://github.com/bipinkrish/Save-Restricted-Bot")]
+        ]),
+        reply_to_message_id=message.id
+    )
 
-@app.on_message(filters.command("start"))
-def start(client, message):
-    print("Received /start command")  # Debug print
-    client.send_message(message.chat.id, "Hello! I am a bot to save restricted content. Send me the post link.")
+@bot.on_message(filters.command("stop"))
+def stop_bot(client: Client, message):
+    global is_stopped
+    is_stopped = True  # Set the flag to stop ongoing processes
+    bot.send_message(
+        message.chat.id,
+        "__🛑 The ongoing process has been stopped. You can start a new process.__",
+        reply_to_message_id=message.id
+    )
 
-async def run_bot():
-    await app.start()
-    print("Bot is running...")  # Confirm bot is running
-    await idle()  # Keep the bot running
+@bot.on_message(filters.text)
+async def save(client: Client, message):
+    global is_stopped
+    print(message.text)
 
-def run_flask():
-    # Run the Flask app on port 10000
-    flask_app.run(host='0.0.0.0', port=10000)
+    # Reset the stop flag for new commands
+    is_stopped = False
 
-if __name__ == "__main__":
-    # Start the bot in a separate thread
-    threading.Thread(target=run_flask).start()
-    asyncio.run(run_bot())
+    # Check if the message contains a valid Telegram link
+    if "https://t.me/" in message.text:
+        try:
+            if "-" in message.text:
+                await handle_batch_requests(message)
+            else:
+                await handle_single_message(message)
+        except Exception as e:
+            await bot.send_message(message.chat.id, f"Error: {e}", reply_to_message_id=message.id)
+    else:
+        await bot.send_message(message.chat.id, "Invalid link. Please provide a valid Telegram message link.", reply_to_message_id=message.id)
+
+async def handle_batch_requests(message):
+    global is_stopped
+    # Extracting the range of message IDs
+    try:
+        parts = message.text.split("/")
+        message_ids = parts[-1].split("-")
+        from_id = int(message_ids[0].strip())
+        to_id = int(message_ids[1].strip())
+        chat_id = parts[-2]  # Extract chat ID from URL
+
+        # Create a list of coroutines for fetching messages
+        tasks = [fetch_message(message, msg_id, chat_id) for msg_id in range(from_id, to_id + 1)]
+        
+        # Execute all tasks concurrently
+        await asyncio.gather(*tasks)
+    except ValueError as e:
+        await bot.send_message(message.chat.id, f"Invalid message ID range: {e}")
+
+async def handle_single_message(message):
+    global is_stopped
+    # Fetch a single message based on the provided link
+    try:
+        parts = message.text.split("/")
+        chat_id = parts[-2]  # Extract chat ID from URL
+        msg_id = int(parts[-1])  # Extract message ID from URL
+        
+        await fetch_message(message, msg_id, chat_id)
+    except Exception as e:
+        await bot.send_message(message.chat.id, f"Error handling single message: {e}", reply_to_message_id=message.id)
+
+async def fetch_message(message, msg_id, chat_id):
+    global is_stopped
+    # Logic to fetch and handle a specific message
+    try:
+        if is_stopped:
+            return  # Exit if the stop flag is set
+
+        msg = await bot.get_messages(chat_id, msg_id)  # Use the bot client for fetching messages
+        
+        # Check if the message contains text or media
+        if msg.text:
+            await bot.send_message(message.chat.id, msg.text, reply_to_message_id=message.id)
+        elif msg.photo:
+            await bot.send_photo(message.chat.id, msg.photo.file_id, reply_to_message_id=message.id)
+        elif msg.video:
+            await bot.send_video(message.chat.id, msg.video.file_id, reply_to_message_id=message.id)
+        elif msg.document:
+            await bot.send_document(message.chat.id, msg.document.file_id, reply_to_message_id=message.id)
+        else:
+            await bot.send_message(message.chat.id, "This message contains unsupported media.", reply_to_message_id=message.id)
+    except Exception as e:
+        await bot.send_message(message.chat.id, f"Error fetching message: {e}", reply_to_message_id=message.id)
+
+# Run the bot
+bot.run()
