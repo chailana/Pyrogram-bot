@@ -2,7 +2,8 @@ import os
 import pyrogram
 from pyrogram import Client, filters
 import aiohttp
-import asyncio
+import aiofiles
+from tqdm import tqdm  # Make sure to install tqdm
 
 # Your bot token and credentials
 bot_token = "7490926656:AAHG-oUUzGPony9xfyApSI0EbbymhneDU1k"
@@ -20,8 +21,17 @@ async def download_file(url):
                 content_type = response.headers.get("Content-Type", "")
                 if "application" in content_type or "image" in content_type or "video" in content_type:
                     filename = url.split("/")[-1]  # Extract filename from URL
-                    async with aiofiles.open(filename, "wb") as f:  # Use aiofiles for async file I/O
-                        await f.write(await response.read())
+
+                    # Use aiofiles for async file I/O and tqdm for progress bar
+                    total_size = int(response.headers.get('Content-Length', 0))
+                    with tqdm(total=total_size, unit='B', unit_scale=True, desc=filename) as bar:
+                        async with aiofiles.open(filename, "wb") as f:
+                            while True:
+                                chunk = await response.content.read(1024)  # Read in chunks
+                                if not chunk:
+                                    break
+                                await f.write(chunk)
+                                bar.update(len(chunk))
                     return filename
             return None
 
