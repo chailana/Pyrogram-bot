@@ -2,7 +2,7 @@ import os
 from pyrogram import Client, filters, idle
 import asyncio
 
-API_ID = (os.getenv("API_ID")
+API_ID = os.getenv("API_ID")
 API_HASH = os.getenv("API_HASH")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
