@@ -5,7 +5,7 @@ import threading
 
 API_ID = 22420997  # Replace with your actual API ID
 API_HASH = "d7fbe2036e9ed2a1468fad5a5584a255"  # Replace with your actual API hash
-BOT_TOKEN = "7490926656:AAHG-oUUzGPony9xfyApSI0EbbymhneDU1k"  # Replace with your actual bot token
+BOT_TOKEN = "7176424785:AAEusrLtmtGgRisJ6Pje6yAnN-ZbdZMoO1Q"  # Replace with your actual bot token
 
 app = Client("my_bot", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
 
