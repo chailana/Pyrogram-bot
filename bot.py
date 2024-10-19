@@ -1,5 +1,5 @@
 import os
-from pyrogram import Client, filters
+from pyrogram import Client, filters, idle
 import asyncio
 
 API_ID = os.getenv("API_ID")
@@ -35,7 +35,7 @@ def save_restricted_content(client, message):
 async def main():
     await app.start()
     print("Bot is running...")
-    await idle()
+    await idle()  # Keep the bot running
 
 if __name__ == "__main__":
     asyncio.run(main())
