@@ -1,0 +1,5 @@
+flask
+gunicorn
+python-dotenv
+pyrogram
+tgcrypto  # Optional but recommended
