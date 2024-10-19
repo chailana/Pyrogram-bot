@@ -9,7 +9,7 @@ BOT_TOKEN = "7490926656:AAHG-oUUzGPony9xfyApSI0EbbymhneDU1k"  # Replace with you
 # Create a Pyrogram client using the bot token
 app = Client("my_bot", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
 
-@app.on_message(filters.COMMAND("start"))
+@app.on_message(filters.command("start"))
 def start(client, message):
     client.send_message(message.chat.id, "Hello! I am a bot to save restricted content. Send me the post link.")
 
