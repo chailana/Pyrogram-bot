@@ -5,3 +5,4 @@ tgcrypto  # Optional but recommended
 aiohttp
 aiofiles
 tqdm
+beautifulsoup4
