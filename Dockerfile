@@ -19,8 +19,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the entire bot code into the container
 COPY . .
 
+# Copy the start.sh script into the container
+COPY start.sh .
+
+# Make the start.sh script executable
+RUN chmod +x start.sh
+
 # Expose the port that your Flask app runs on (now 10000)
 EXPOSE 10000
 
-# Specify the command to run your app and bot
-CMD gunicorn app:app --bind 0.0.0.0:10000 & python3 bot.py
+# Specify the command to run the start.sh script
+CMD ["./start.sh"]
