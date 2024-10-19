@@ -2,7 +2,7 @@ import os
 from pyrogram import Client, filters, idle
 import asyncio
 
-API_ID = os.getenv("22420997")
+API_ID = int(os.getenv("22420997"))
 API_HASH = os.getenv("d7fbe2036e9ed2a1468fad5a5584a255")
 BOT_TOKEN = os.getenv("7176424785:AAEusrLtmtGgRisJ6Pje6yAnN-ZbdZMoO1Q")
 
