@@ -2,9 +2,9 @@ import os
 from pyrogram import Client, filters, idle
 import asyncio
 
-API_ID = int(os.getenv("22420997"))
-API_HASH = os.getenv("d7fbe2036e9ed2a1468fad5a5584a255")
-BOT_TOKEN = os.getenv("7176424785:AAEusrLtmtGgRisJ6Pje6yAnN-ZbdZMoO1Q")
+API_ID = (os.getenv("API_ID")
+API_HASH = os.getenv("API_HASH")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # Create a Pyrogram client using the bot token
 app = Client("my_bot", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
