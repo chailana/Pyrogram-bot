@@ -7,7 +7,7 @@ API_HASH = os.getenv("API_HASH")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # Create a Pyrogram client using the bot token
-app = Client("my_bot", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
+app = Client("my_bot", bot_token=7176424785:AAEusrLtmtGgRisJ6Pje6yAnN-ZbdZMoO1Q, api_id=22420997, api_hash=d7fbe2036e9ed2a1468fad5a5584a255)
 
 @app.on_message(filters.command("start"))
 def start(client, message):
