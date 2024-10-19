@@ -1,5 +1,7 @@
-aiohttp
 flask
 gunicorn
 pyrogram
-tgcrypto  # Optional but recommended
+tgcrypto  # Optional but recommended 
+aiohttp
+aiofiles
+tqdm
